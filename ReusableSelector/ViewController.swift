@@ -11,7 +11,7 @@ import UIKit
 class ViewController: UIViewController, OptionSelectionHandlerProtocol {
 
     @IBOutlet weak var textLabel: UILabel!
-    var selectionController: OptionSelectionViewController?
+    var selectionController: OptionSelectionViewController<String>?
 
 
     override func viewDidLoad() {
@@ -33,8 +33,8 @@ class ViewController: UIViewController, OptionSelectionHandlerProtocol {
         navigationController?.pushViewController(selectionController!, animated: true)
     }
 
-    func selected(_ value: String) {
-        textLabel.text = value
+    func selected<T>(_ value: T) where T : Describable {
+        textLabel.text = value.description
     }
 
 }

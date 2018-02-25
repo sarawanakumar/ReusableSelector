@@ -10,13 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ReusableSelector/EmployeeTableViewController.swift"
-            timestampString = "539716915.552494"
+            timestampString = "541247499.9692611"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "74"
-            endingLineNumber = "74"
-            landmarkName = "selected(_:)"
-            landmarkType = "7">
+            endingLineNumber = "74">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

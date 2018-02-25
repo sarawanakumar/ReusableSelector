@@ -9,7 +9,7 @@
 import UIKit
 
 class EmployeeTableViewController: UITableViewController, OptionSelectionHandlerProtocol {
-    var selectionViewController: OptionSelectionViewController?
+    var selectionViewController: OptionSelectionViewController<String>?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,7 +49,7 @@ class EmployeeTableViewController: UITableViewController, OptionSelectionHandler
         case (1,0):
             let companyNames = ["Google", "Oracle", "IBM", "Microsoft", "Apple", "Adobe"]
             selectionViewController = OptionSelectionViewController(data: companyNames) { (selectedValue) in
-                cell.textLabel?.text = selectedValue
+                cell.textLabel?.text = selectedValue.description
             }
             selectionViewController?.selectedData = cell.textLabel?.text ?? ""
             selectionViewController?.title = "Company"
@@ -65,9 +65,9 @@ class EmployeeTableViewController: UITableViewController, OptionSelectionHandler
         view.endEditing(true)
     }
 
-    func selected(_ value: String) {
+    func selected<T>(_ value: T) where T : Describable {
         if let cell = tableView.cellForRow(at: IndexPath(row: 2, section: 0)) {
-            cell.textLabel?.text = value
+            cell.textLabel?.text = value.description
         }
     }
 }

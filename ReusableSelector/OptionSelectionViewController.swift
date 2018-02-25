@@ -13,7 +13,7 @@ enum PresentationMode {
 }
 
 protocol OptionSelectionHandlerProtocol: class {
-    func selected(_ value: String)
+    func selected<T: Describable>(_ value: T)
 }
 
 protocol Describable {
@@ -24,21 +24,21 @@ class OptionSelectionViewController<T: Describable>: UITableViewController {
 
     private var selectedIndex: Int?
     private var presentationMode = PresentationMode.presented
-    private var selected: ((String) -> ())?
+    private var selected: ((T) -> ())?
 
 
     var data = [T]()
-    var selectedData: String = "" {
+    var selectedData: T? {
         didSet {
             selectedIndex = data.index {
-                return $0.description == selectedData
+                return $0.description == selectedData?.description
             }
         }
     }
 
     weak var delegate: OptionSelectionHandlerProtocol?
 
-    convenience init(data: [T], selected: @escaping (String) -> () = { _ in}) {
+    convenience init(data: [T], selected: @escaping (T) -> () = { _ in}) {
         self.init(style: UITableViewStyle.plain)
         self.data = data
         self.selected = selected
@@ -92,11 +92,12 @@ class OptionSelectionViewController<T: Describable>: UITableViewController {
 
         if let cell = tableView.cellForRow(at: indexPath) {
             cell.accessoryType = .checkmark
-            selectedData = cell.textLabel?.text ?? ""
+            //selectedData = cell.textLabel?.text ?? ""
+            selectedData = data[indexPath.row]
         }
 
-        delegate?.selected(selectedData)
-        selected?(selectedData)
+        delegate?.selected(selectedData!)
+        selected?(selectedData!)
         removeViewController(presentationMode)
     }
 
