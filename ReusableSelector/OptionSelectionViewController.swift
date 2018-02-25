@@ -16,25 +16,29 @@ protocol OptionSelectionHandlerProtocol: class {
     func selected(_ value: String)
 }
 
-class OptionSelectionViewController: UITableViewController {
+protocol Describable {
+    var description: String { get }
+}
+
+class OptionSelectionViewController<T: Describable>: UITableViewController {
 
     private var selectedIndex: Int?
     private var presentationMode = PresentationMode.presented
-    private var selected: (String) -> () = {_ in }
+    private var selected: ((String) -> ())?
 
 
-    var data = [String]()
+    var data = [T]()
     var selectedData: String = "" {
         didSet {
             selectedIndex = data.index {
-                return $0 == selectedData
+                return $0.description == selectedData
             }
         }
     }
 
     weak var delegate: OptionSelectionHandlerProtocol?
 
-    convenience init(data: [String], selected: @escaping (String) -> () = { _ in}) {
+    convenience init(data: [T], selected: @escaping (String) -> () = { _ in}) {
         self.init(style: UITableViewStyle.plain)
         self.data = data
         self.selected = selected
@@ -92,13 +96,13 @@ class OptionSelectionViewController: UITableViewController {
         }
 
         delegate?.selected(selectedData)
-        selected(selectedData)
+        selected?(selectedData)
         removeViewController(presentationMode)
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: UITableViewCellStyle.default, reuseIdentifier: nil)
-        cell.textLabel?.text = data[indexPath.row]
+        cell.textLabel?.text = data[indexPath.row].description
 
         if let selectedIndex = selectedIndex,
             selectedIndex == indexPath.row {
@@ -119,5 +123,11 @@ class OptionSelectionViewController: UITableViewController {
 
             navController.popViewController(animated: true)
         }
+    }
+}
+
+extension String: Describable {
+    var description: String {
+        return self
     }
 }
