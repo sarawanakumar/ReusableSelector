@@ -37,21 +37,23 @@ class EmployeeTableViewController: UITableViewController, OptionSelectionHandler
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let cell = tableView.cellForRow(at: indexPath) else { return }
 
+        let selectedValue = cell.textLabel?.text
+
         switch (indexPath.section, indexPath.row) {
         case (0,2):
             let bloodGroupData = ["A+", "B+", "O+", "AB+", "AB-", "O-", "B-", "A-"]
-            selectionViewController = OptionSelectionViewController(data: bloodGroupData)
+
+            selectionViewController = OptionSelectionViewController(data: bloodGroupData, selectedOption: selectedValue)
             selectionViewController?.delegate = self
-            selectionViewController?.selectedData = cell.textLabel?.text ?? ""
             selectionViewController?.title = "Blood Group"
             navigationController?.pushViewController(selectionViewController!, animated: true)
 
         case (1,0):
             let companyNames = ["Google", "Oracle", "IBM", "Microsoft", "Apple", "Adobe"]
-            selectionViewController = OptionSelectionViewController(data: companyNames) { (selectedValue) in
-                cell.textLabel?.text = selectedValue.description
-            }
-            selectionViewController?.selectedData = cell.textLabel?.text ?? ""
+
+            selectionViewController = OptionSelectionViewController(data: companyNames, selectedOption: selectedValue, selected: { (selectedValue) in
+                cell.textLabel?.text = selectedValue
+            })
             selectionViewController?.title = "Company"
             navigationController?.pushViewController(selectionViewController!, animated: true)
 
@@ -65,7 +67,7 @@ class EmployeeTableViewController: UITableViewController, OptionSelectionHandler
         view.endEditing(true)
     }
 
-    func selected<T>(_ value: T) where T : Describable {
+    func selected<T: Describable>(_ value: T) {
         if let cell = tableView.cellForRow(at: IndexPath(row: 2, section: 0)) {
             cell.textLabel?.text = value.description
         }

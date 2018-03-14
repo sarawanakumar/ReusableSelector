@@ -16,32 +16,70 @@ protocol OptionSelectionHandlerProtocol: class {
     func selected<T: Describable>(_ value: T)
 }
 
-protocol Describable {
+protocol Describable: Equatable, CustomStringConvertible {
     var description: String { get }
+}
+
+extension Describable {
+    static func ==(_ lhs: Self, _ rhs: Self) -> Bool {
+        return lhs.description == rhs.description
+    }
+}
+
+protocol Selectable {
+    mutating func select(optionAt index: Int) throws
+}
+
+enum CError: Error {
+    case outOfBounds
+}
+
+struct OptionList<T: Describable>: Selectable {
+    var options: [T]
+    var selectedOption: T?
+    var selectedIndex: Int? {
+        return options.index {
+            $0 == selectedOption
+        }
+    }
+
+    init(options: [T], selectedOption: T?) {
+        self.options = options
+        self.selectedOption = selectedOption
+    }
+
+    init() {
+        self.options = []
+    }
+
+    mutating func select(optionAt index: Int) throws {
+        guard index < options.endIndex else {
+            throw CError.outOfBounds
+        }
+        selectedOption = options[index]
+    }
 }
 
 class OptionSelectionViewController<T: Describable>: UITableViewController {
 
-    private var selectedIndex: Int?
     private var presentationMode = PresentationMode.presented
     private var selected: ((T) -> ())?
 
-
-    var data = [T]()
-    var selectedData: T? {
-        didSet {
-            selectedIndex = data.index {
-                return $0.description == selectedData?.description
-            }
-        }
+    private var selectedIndex: Int? {
+        return optionList.selectedIndex
     }
 
+    private var selectedOption: T? {
+        return optionList.selectedOption
+    }
+
+    var optionList = OptionList<T>()
     weak var delegate: OptionSelectionHandlerProtocol?
 
-    convenience init(data: [T], selected: @escaping (T) -> () = { _ in}) {
+    convenience init(data: [T], selectedOption: T?, selected: @escaping (T) -> () = { _ in}) {
         self.init(style: UITableViewStyle.plain)
-        self.data = data
         self.selected = selected
+        self.optionList = OptionList(options: data, selectedOption: selectedOption)
     }
 
     //MARK:- Protected initializers
@@ -62,9 +100,6 @@ class OptionSelectionViewController<T: Describable>: UITableViewController {
     }
 
     //MARK:- ViewController LifeCycle methods
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
 
     override func viewWillAppear(_ animated: Bool) {
         if isBeingPresented {
@@ -81,7 +116,7 @@ class OptionSelectionViewController<T: Describable>: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return data.count
+        return optionList.options.count
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -92,18 +127,17 @@ class OptionSelectionViewController<T: Describable>: UITableViewController {
 
         if let cell = tableView.cellForRow(at: indexPath) {
             cell.accessoryType = .checkmark
-            //selectedData = cell.textLabel?.text ?? ""
-            selectedData = data[indexPath.row]
+            try? optionList.select(optionAt: indexPath.row)
         }
 
-        delegate?.selected(selectedData!)
-        selected?(selectedData!)
+        delegate?.selected(selectedOption!)
+        selected?(selectedOption!)
         removeViewController(presentationMode)
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: UITableViewCellStyle.default, reuseIdentifier: nil)
-        cell.textLabel?.text = data[indexPath.row].description
+        cell.textLabel?.text = optionList.options[indexPath.row].description
 
         if let selectedIndex = selectedIndex,
             selectedIndex == indexPath.row {
